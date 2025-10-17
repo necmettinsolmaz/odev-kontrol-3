@@ -208,6 +208,9 @@
 					// KRİTİK DEĞİŞİKLİK: * işaretini metinden kaldır
 					cell.innerText = cell.innerText.replace('*', ''); 
 
+					const hwIndex = cell.dataset.hw;
+					const studentIndex = cell.dataset.student;
+					const newOriginalStatus = classes[currentClass].homeworks[hwIndex].statuses[studentIndex];
                     cell.dataset.originalStatus = newOriginalStatus;
 
 				});
@@ -710,3 +713,4 @@
     </script>
 </body>
 </html>
+
