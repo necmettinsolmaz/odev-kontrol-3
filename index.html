@@ -360,6 +360,7 @@
                     cell._dblclickHandler = function(){
                         this.setAttribute('contenteditable', 'true');
                         this.focus();
+						document.getSelection().collapse(this, 1); // 🔹 İmleci sona taşır
                     };
 
                     cell.addEventListener('blur', cell._blurHandler);
