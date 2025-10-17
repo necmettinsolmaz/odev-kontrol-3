@@ -142,7 +142,7 @@
 		
 		<div class="flex gap-3">
 			<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
-				Değişiklikleri Kaydet
+				Kaydet
 			</button>
 			
 			<button id="btnExportJSON" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">JSON Aktar</button>
@@ -207,6 +207,9 @@
 					
 					// KRİTİK DEĞİŞİKLİK: * işaretini metinden kaldır
 					cell.innerText = cell.innerText.replace('*', ''); 
+
+                    cell.dataset.originalStatus = newOriginalStatus;
+
 				});
 				
 				// Kaydetme butonunu gizle
@@ -253,7 +256,7 @@
             }
 
             function renderTable(){
-                 const tbody=document.getElementById('homeworkBody');
+                const tbody=document.getElementById('homeworkBody');
                 const thead=document.getElementById('tableHead');
                 const display = document.getElementById('currentClassNameDisplay');
                 const tableHeaderArea = document.getElementById('tableHeaderArea');
@@ -315,7 +318,14 @@
                     
                     // Öğrenci Durum Sütunları
                     const statusCells = hw.statuses.map((status,studentIndex) => 
-                        `<td class="status-cell"><div class="status ${status}" data-hw='${hwIndex}' data-student='${studentIndex}'>${status}</div></td>`
+                        `<td class="status-cell">
+                            <div class="status ${status}" 
+                                data-hw='${hwIndex}' 
+                                data-student='${studentIndex}'
+                                data-original-status='${status}'>
+                                ${status}
+                            </div>
+                        </td>`
                     ).join('');
 
                     row.innerHTML = hwCells + statusCells;
@@ -389,20 +399,31 @@
 							this.classList.remove(oldStatus);
 						}
 						this.classList.add(newStatus); 
-						// KRİTİK DEĞİŞİKLİK: Statü metnine YILDIZ (*) Ekle
-						this.innerText = newStatus + '*'; 
+                        this.innerText = newStatus;
+                        //DOM'dan kayıtlı değeri al
+                        const originalStatus = this.dataset.originalStatus;
 
-						// Kaydedilmemiş vurgusunu ekle
-						this.classList.add('pending-change');
+                        if(newStatus === originalStatus){
+                            //durum orijinal değerine geri döndü: Görseli temizle
+                            this.classList.remove('pending-change');
+                            this.innerText = newStatus; //Yıldızı kaldır
+                        }else{
+                            //durum kayıtlı değerden farklı ise Vurgula
+                            this.classList.add('pending-change');
+                            //durum metnine yıldız(*) ekle tabi yoksa
+                            if(!this.innerText.includes('*')){
+                                this.innerText = newStatus + '*';
+                            }
+                        }
 
-						// Kaydetme butonunu göster
-						document.getElementById('btnSaveStatuses').classList.remove('hidden');
 
-						// YENİ: Kalıcı Vurgu (pending-change) ekle
-						this.classList.add('pending-change');
-
-						// Kaydetme butonunu göster
-						document.getElementById('btnSaveStatuses').classList.remove('hidden');
+						// Kaydetme butonunu göster/gizle
+                        const hasPendingChanges = document.querySelectorAll('.status.pending-change').length > 0;
+                        if(hasPendingChanges){
+                            document.getElementById('btnSaveStatuses').classList.remove('hidden');
+                        } else{
+                            document.getElementById('btnSaveStatuses').classList.add('hidden');
+                        }		
 
 					};
 					
@@ -688,5 +709,4 @@
         });
     </script>
 </body>
-
 </html>
