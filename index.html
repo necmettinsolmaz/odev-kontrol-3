@@ -146,7 +146,7 @@
 			</button>
 			
 			<button id="btnExportJSON" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">JSON Aktar</button>
-			<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excel (CSV) Aktar</button>
+			<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>
 		</div>
 	</div>
 		
@@ -162,7 +162,7 @@
     <script>
 		let classes; 
 		let currentClass = '';
-		const cycleStatuses = ["Yaptı", "Yapmadı", "Eksik", "Gelmedi", "KitapYok"];
+		const cycleStatuses = ["Yaptı", "Yapmadı", "Eksik", "Gelmedi", "Kitabı yok"];
         document.addEventListener('DOMContentLoaded', function(){
 		
             classes = JSON.parse(localStorage.getItem('classes') || '{}');
@@ -289,8 +289,8 @@
                         <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Kaynak</th>
                         <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Konu</th>
                         <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Sayfa</th>
-                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Veriliş</th>
-                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Kontrol</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Veriliş T.</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white">Kontrol T.</th>
                         ${studentHeaders}
                     </tr>
                 `;
@@ -634,8 +634,8 @@
 					'Kaynak',
 					'Konu',
 					'Sayfa',
-					'Veriliş Tarihi',
-					'Kontrol Tarihi',
+					'Veriliş T.',
+					'Kontrol T.',
 					...classes[currentClass].students
 				];
 
@@ -712,4 +712,5 @@
     </script>
 </body>
 </html>
+
 
