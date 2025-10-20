@@ -212,7 +212,7 @@
                     cell.dataset.originalStatus = newOriginalStatus;
 
 				});
-				
+				renderTable();
 				// Kaydetme butonunu gizle
 				document.getElementById('btnSaveStatuses').classList.add('hidden');
 			}
@@ -318,16 +318,51 @@
                     `;
                     
                     // Öğrenci Durum Sütunları
-                    const statusCells = hw.statuses.map((status,studentIndex) => 
-                        `<td class="status-cell">
-                            <div class="status ${status}" 
-                                data-hw='${hwIndex}' 
-                                data-student='${studentIndex}'
-                                data-original-status='${status}'>
-                                ${status}
-                            </div>
-                        </td>`
-                    ).join('');
+					const statusCells = hw.statuses.map((status, studentIndex) => {
+
+					let lateIndicator = '';
+					const checkDateISO = hw.checkDate; // Ödevin Kontrol Tarihi (Son Teslim)
+					
+					// Yaptı tarihini status_timestamps'dan al. 
+					// Eğer dizi yoksa (eski veriler için) veya o öğrenci için tarih yoksa null olur.
+					const statusChangeDateISO = hw.status_timestamps ? hw.status_timestamps[studentIndex] : null;
+
+					// Eğer statü "Yaptı" ise ve her iki tarih de varsa hesapla
+					if (status === "Yaptı" && checkDateISO && statusChangeDateISO) {
+
+						// Tarihleri saatleri sıfırlayarak milisaniye cinsine çevir (sadece gün bazında karşılaştırma)
+						const checkDateMs = new Date(checkDateISO).setHours(0, 0, 0, 0);
+						const statusDateMs = new Date(statusChangeDateISO).setHours(0, 0, 0, 0);
+
+						// Gecikme Var mı? (Teslim tarihi, kontrol tarihinden BÜYÜK ise)
+						if (statusDateMs > checkDateMs) {
+							
+							// Gün farkını hesapla
+							const diffTime = Math.abs(statusDateMs - checkDateMs);
+							const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+							
+							// Gecikme Bilgisini içeren DIV (Görsel ve Gün Sayısı)
+							lateIndicator = `<span class="absolute top-[2px] right-[2px] 
+												bg-white-600 rounded-full text-[0.6rem] 
+												font-bold p-0.5 leading-none text-white 
+												shadow-md">
+												⏰${diffDays}
+											</span>`;
+						}
+					}
+					
+					// HTML String'ini oluştur (Gecikme göstergesini içine göm)
+					return `<td class="status-cell">
+						<div class="status relative ${status}" 
+							data-hw='${hwIndex}' 
+							data-student='${studentIndex}'
+							data-original-status='${status}'>
+							
+							${status} 
+							${lateIndicator}  </div>
+					</td>`;
+					
+				}).join('');
 
                     row.innerHTML = hwCells + statusCells;
                     tbody.appendChild(row);
@@ -379,53 +414,108 @@
 					cell._clickHandler = function() {
 						
 						// 1. DURUM DEĞİŞİKLİĞİ MANTIĞI (Aynı Kalır)
+// 1. DURUM DEĞİŞİKLİĞİ MANTIĞI
 						const hwIndex = Number(this.dataset.hw);
 						const studentIndex = Number(this.dataset.student);
 						const oldStatus = classes[currentClass].homeworks[hwIndex].statuses[studentIndex];
-						let newStatus = ''; 
+						const originalStatus = this.dataset.originalStatus; 
+						let newStatus = ''; 
 						
 						if (oldStatus === "") {
-							newStatus = cycleStatuses[0]; 
+							newStatus = cycleStatuses[0]; 
 						} else {
 							let currentCycleIndex = cycleStatuses.indexOf(oldStatus);
 							currentCycleIndex = (currentCycleIndex + 1) % cycleStatuses.length;
 							newStatus = cycleStatuses[currentCycleIndex];
 						}
 						
-						// KRİTİK DEĞİŞİKLİK: Kaydetmek yerine sadece veriyi güncelle
-						classes[currentClass].homeworks[hwIndex].statuses[studentIndex] = newStatus;
-						// saveData(); ARTIK BURADA YOK!
+						// ***************************************************************
+						// 2. Status Zaman Damgasını Kaydetme (CRITICAL)
+						// ***************************************************************
+						const todayISO = getIsoDate(new Date());
+						const currentHomework = classes[currentClass].homeworks[hwIndex];
 
-						// 2. VİSUEL GÜNCELLEME 
+						// Tarih dizisinin varlığını kontrol et ve doldur
+						if (!currentHomework.status_timestamps || currentHomework.status_timestamps.length !== currentHomework.statuses.length) {
+							currentHomework.status_timestamps = new Array(currentHomework.statuses.length).fill(null);
+						}
+
+						// Eğer yeni statü "Yaptı" ise, o anki tarihi kaydet
+						if (newStatus === "Yaptı") {
+							currentHomework.status_timestamps[studentIndex] = todayISO;
+						} else {
+							// Statü değişirse tarihi sıfırla
+							currentHomework.status_timestamps[studentIndex] = null;
+						}
+						// ***************************************************************
+						
+						// 3. Statü Verisini SADECE Bellekte Güncelle (Kaydetmiyoruz!)
+						classes[currentClass].homeworks[hwIndex].statuses[studentIndex] = newStatus;
+						// saveData(); // KAPALI KALMALI!
+						
+						// ================================================================
+						// 4. VİSUEL GÜNCELLEME
+						// ================================================================
+						
+						// 4.1. Durum Sınıflarını Güncelle
 						if (oldStatus !== "") {
 							this.classList.remove(oldStatus);
 						}
 						this.classList.add(newStatus); 
-                        this.innerText = newStatus;
-                        //DOM'dan kayıtlı değeri al
-                        const originalStatus = this.dataset.originalStatus;
+						this.classList.add('relative'); // KRİTİK: Rozet için gereklidir
+						
+						// 4.2. Gecikme Hesaplaması (Anlık)
+						let lateIndicatorHTML = '';
+						const checkDateISO = currentHomework.checkDate; 
+						// Yeni kaydedilen veya null olan tarihi oku:
+						const statusChangeDateISO = currentHomework.status_timestamps[studentIndex]; 
 
-                        if(newStatus === originalStatus){
-                            //durum orijinal değerine geri döndü: Görseli temizle
-                            this.classList.remove('pending-change');
-                            this.innerText = newStatus; //Yıldızı kaldır
-                        }else{
-                            //durum kayıtlı değerden farklı ise Vurgula
-                            this.classList.add('pending-change');
-                            //durum metnine yıldız(*) ekle tabi yoksa
-                            if(!this.innerText.includes('*')){
-                                this.innerText = newStatus + '*';
-                            }
-                        }
+						if (newStatus === "Yaptı" && checkDateISO && statusChangeDateISO) {
+							const checkDateMs = new Date(checkDateISO).setHours(0, 0, 0, 0);
+							const statusDateMs = new Date(statusChangeDateISO).setHours(0, 0, 0, 0);
 
+							if (statusDateMs > checkDateMs) {
+							
+								const diffTime = Math.abs(statusDateMs - checkDateMs);
+								const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+								// renderTable'dan gelen aynı DIV yapısı
+								console.log(`GECİKME BULUNDU! Gün Farkı: ${diffDays}`); // BURAYI EKLEYİN
+								lateIndicatorHTML = `<span class="absolute top-[2px] right-[2px] 
+															bg-white-600 rounded-full text-[0.6rem] 
+															font-bold p-0.5 leading-none text-white 
+															shadow-md">
+														⏰${diffDays}
+													</span>`;
+							}
+						}
 
-						// Kaydetme butonunu göster/gizle
-                        const hasPendingChanges = document.querySelectorAll('.status.pending-change').length > 0;
-                        if(hasPendingChanges){
-                            document.getElementById('btnSaveStatuses').classList.remove('hidden');
-                        } else{
-                            document.getElementById('btnSaveStatuses').classList.add('hidden');
-                        }		
+						// 4.3. Yıldız Ekleme Mantığı (Kaydet butonu için KRİTİK)
+						let displayStatus = newStatus;
+						let pendingChange = (newStatus !== originalStatus);
+
+						if(pendingChange){
+							this.classList.add('pending-change');
+							displayStatus += '*'; 
+						} else {
+							this.classList.remove('pending-change');
+						}
+						
+						// 4.4. HÜCRE İÇERİĞİNİ GÜVENLİ ŞEKİLDE YENİDEN OLUŞTUR
+						// Önce sadece metin (ve varsa yıldız)
+						this.innerHTML = displayStatus; 
+
+						// Sonra gecikme HTML'ini ekle
+						if (lateIndicatorHTML) {
+							this.insertAdjacentHTML('beforeend', lateIndicatorHTML);
+						}
+
+						// 5. Kaydetme butonunu göster/gizle
+						const hasPendingChanges = document.querySelectorAll('.status.pending-change').length > 0;
+						if(hasPendingChanges){
+							document.getElementById('btnSaveStatuses').classList.remove('hidden');
+						} else{
+							document.getElementById('btnSaveStatuses').classList.add('hidden');
+						}		
 
 					};
 					
