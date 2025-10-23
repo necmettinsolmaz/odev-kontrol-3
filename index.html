@@ -89,14 +89,14 @@
     </style>
 </head>
 <body class="font-sans bg-gray-100 p-5 md:p-10">
-	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-3xl font-bold text-gray-800">Ödev Takip Sistemi</h1>
+	<div class="flex justify-between items-center mb-2">
+		<h1 class="text-xl font-bold text-gray-800">Çınarlar Vip Ödev Takip</h1>
 		
 		<div class="flex gap-3 items-center">
-			<button id="btnExportJSON" class="bg-blue-600 text-white p-2 rounded-lg text-sm hover:bg-blue-700 transition duration-150">
+			<button id="btnExportJSON" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">
 				💾&nbsp;Yedekle
 			</button>
-			<button id="btnImportJSONTrigger" class="bg-amber-600 text-white p-2 rounded-lg text-sm hover:bg-amber-700 transition duration-150">
+			<button id="btnImportJSONTrigger" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">
 				📥&nbsp;Yükle
 			</button>
 			<input type="file" id="fileImport" accept=".json" class="hidden">
@@ -441,7 +441,6 @@
 
 					};
 					
-					// KRİTİK DEĞİŞİKLİK: 'dblclick' yerine 'click' ile dinlemeye başla
 					cell.addEventListener('click', cell._clickHandler);
 				});
 
@@ -473,6 +472,7 @@
                         dateFormat: "Y-m-d", // Veritabanı (localStorage) formatı
                         altInput: true,
                         altFormat: "j M. D", // Görünen format: 17 Tem. Salı
+						disableMobile: true,
                         
                         // Tarih seçildiğinde
                         onClose: function(selectedDates, dateStr, instance) {
