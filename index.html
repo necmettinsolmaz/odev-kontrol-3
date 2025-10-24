@@ -601,7 +601,7 @@
 				const jsonData = JSON.stringify(classes, null, 2);
 
 				// 3️⃣ Blob nesnesi oluştur (gerçek dosya gibi davranır)
-				const blob = new Blob([jsonData], { type: "application/json" });
+				const blob = new Blob([jsonData], { type: "application/json;charset=utf-8" });
 
 				// 4️⃣ Blob için geçici bir URL oluştur
 				const url = URL.createObjectURL(blob);
