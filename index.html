@@ -185,6 +185,18 @@
         document.addEventListener('DOMContentLoaded', function(){
 		
             classes = JSON.parse(localStorage.getItem('classes') || '{}');
+			//Ders adı bilgisi kaydediliyor/getiriliyor.
+			const LESSON_STORAGE_KEY = 'lessonName';
+			const DEFAULT_LESSON_NAME = 'Matematik'; // Varsayılan değer
+			
+			// 1. Kalıcı Veriyi Yükle veya Varsayılanı Ata
+			let lessonName = localStorage.getItem(LESSON_STORAGE_KEY);
+			
+			if (!lessonName) {
+				 // İlk defa açılıyorsa varsayılanı kullan ve kaydet
+				 lessonName = DEFAULT_LESSON_NAME;
+				 localStorage.setItem(LESSON_STORAGE_KEY, lessonName);
+			}
 
             // YENİ: Kaydetme Bildirimini Gösteren Fonksiyon
 			function showSaveNotification(isError = false, message = 'Kaydedildi!') { // İkinci parametreyi ekledik
@@ -277,6 +289,11 @@
                 const tbody=document.getElementById('homeworkBody');
                 const thead=document.getElementById('tableHead');
                 const display = document.getElementById('currentClassNameDisplay');
+				
+				// Ders adını localStorage'dan çek veya varsayılanı kullan
+				const LESSON_STORAGE_KEY = 'lessonName';
+				const DEFAULT_LESSON_NAME = 'Matematik';
+				const lessonName = localStorage.getItem(LESSON_STORAGE_KEY) || DEFAULT_LESSON_NAME;
                 const tableHeaderArea = document.getElementById('tableHeaderArea');
                 
                 // Tabloyu her zaman temizle
@@ -292,7 +309,57 @@
                 
                 // Sınıf Seçili İse Başlığı Güncelle ve Tabloyu Oluşturmaya Başla
                 tableHeaderArea.classList.remove('hidden');
-                display.innerText = `${currentClass} Sınıfı Ödev Takibi`;
+                // 🎯 KRİTİK GÜNCELLEME: Başlığa Ders Adı ve Düzenleme Yeteneği Ekleme
+				display.innerHTML = `
+					${currentClass} Sınıfı 
+					<span id="editableLessonName" 
+						  contenteditable="false"
+						  title="Dersi değiştirmek için çift tıklayın."
+						 class="text-blue-700 font-bold p-1 rounded cursor-pointer whitespace-nowrap
+                  focus:outline-none border border-transparent hover:bg-blue-50"
+						  >${lessonName}</span> 
+					Dersi Ödev Takibi
+				`;
+				
+				// Ders Adı Düzenleme Olay Dinleyicilerini Ekle
+				const editableSpan = document.getElementById('editableLessonName');
+				if (editableSpan) {
+					
+					// Çift Tıklama/Odaklanma ile düzenlemeye aç
+					editableSpan.addEventListener('dblclick', function() {
+						// contenteditable'ı TRUE yap ve odaklan
+						this.setAttribute('contenteditable', 'true');
+						this.focus();
+						document.getSelection().collapse(this, 1); // İmleci sona taşı
+						this.classList.remove('border-transparent');
+						this.classList.add('border-blue-700');
+					});
+					
+					// Odak kaybolduğunda (kaydetme)
+					editableSpan.addEventListener('blur', function() {
+						const newLesson = this.textContent.trim() || DEFAULT_LESSON_NAME;
+						localStorage.setItem(LESSON_STORAGE_KEY, newLesson); // Kalıcı kaydet
+						this.textContent = newLesson; // Değeri temizle
+						
+						// KRİTİK: contenteditable'ı FALSE yap ve tek tıklamayı engelle
+						this.setAttribute('contenteditable', 'false');
+						
+						this.classList.remove('border-blue-700'); 
+						this.classList.add('border-transparent');
+						// Bildirim fonksiyonunuzu çağırın
+						if (typeof showSaveNotification === 'function') {
+							showSaveNotification(false, "Ders adı kalıcı olarak güncellendi.");
+						}
+					});
+
+					// Enter tuşu ile kaydetme
+					editableSpan.addEventListener('keydown', function(e) {
+						if (e.key === 'Enter') {
+							e.preventDefault(); 
+							this.blur(); 
+						}
+					});
+				}
                
                 
                 // ... (Tablo Başlığı Oluşturma Mantığı) ...
