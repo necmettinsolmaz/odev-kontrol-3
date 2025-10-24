@@ -899,99 +899,115 @@
 
 		// GÜNCELLENMİŞ shareTableAsImage FONKSİYONU
 		function shareTableAsImage() {
-			if (!currentClass) {
-				// Hata yönetimi aynı kalır...
-				return;
-			}
-			
-			const shareButton = document.getElementById('btnShareToParent');
-			const originalText = shareButton.innerHTML;
-			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
-			shareButton.disabled = true;
+	if (!currentClass) return;
 
-			const targetElement = document.getElementById('tableContainer'); 
-			if (!targetElement) {
-				// Hata yönetimi aynı kalır...
-				return;
-			}
-			
-			const tableDiv = targetElement.querySelector('.overflow-x-auto');
-			const headerArea = document.getElementById('tableHeaderArea');
-			
-			// --- KRİTİK İYİLEŞTİRME BAŞLANGICI ---
-			
-			// 1. CSS Yedeklerini ve Değiştirilecek Elemanları Sakla
-			const originalOverflow = tableDiv ? tableDiv.style.overflowX : '';
-			const originalContainerPadding = targetElement.style.padding;
-			const originalContainerMargin = targetElement.style.margin; // YENİ: Margin yedeklemesi
-			
-			
-			// YENİ KRİTİK BÖLÜM: Çıktıda görünmesini istemediğiniz butonları gizle
-			const shareButtonDisplay = shareButton.style.display;
-			const exportCSVButton = document.getElementById('btnExportCSV');
-			const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
-			
-			shareButton.style.display = 'none'; // 'Hazırlanıyor' butonunu tamamen gizle
-			if(exportCSVButton) exportCSVButton.style.display = 'none'; // 'Excele Aktar' butonunu gizle
+	const shareButton = document.getElementById('btnShareToParent');
+	const originalText = shareButton.innerHTML;
+	shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
+	shareButton.disabled = true;
 
-			// 2. Geçici CSS Değişiklikleri (Layout ve Kesilmeleri Önlemek İçin)
-			if (tableDiv) tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
-			targetElement.style.padding = '5px'; // Kapsayıcıya ekstra boşluk ver
-			targetElement.style.margin = '5 auto';
-			targetElement.style.backgroundColor = '#ffffff'; 
-			
-			// Başlık sıkışmasını önlemek için, headerArea'nın içindeki Flexbox'ı geçici olarak kapatabiliriz.
-			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center');
-			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
-			if (headerDiv) headerDiv.style.display = 'block'; // Buton alanını block yapıp sıkışmayı çöz
+	const targetElement = document.getElementById('tableContainer'); 
+	if (!targetElement) return;
 
-			document.querySelectorAll('[contenteditable="true"]').forEach(el => el.blur());
+	const tableDiv = targetElement.querySelector('.overflow-x-auto');
+	const headerArea = document.getElementById('tableHeaderArea');
 
+	// --- CSS Yedekleri ---
+	const originalOverflow = tableDiv ? tableDiv.style.overflowX : '';
+	const originalPadding = targetElement.style.padding;
+	const originalMargin = targetElement.style.margin;
+	const originalDisplay = targetElement.style.display;
 
-			// dom-to-image çağrısı
-			domtoimage.toPng(targetElement, {
-				bgcolor: '#ffffff',
-				// Genişliği, butonlar gizlendikten sonra bile tam almasını sağlamak için
-				width: targetElement.scrollWidth, 
-				height: targetElement.scrollHeight,
-			})
-			.then(function (dataUrl) {
-				// ... (İndirme ve Bildirim Mantığı) ...
-				const dl = document.createElement('a');
-				dl.href = dataUrl;
-				dl.download = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
+	// Butonları gizle
+	const shareButtonDisplay = shareButton.style.display;
+	const exportCSVButton = document.getElementById('btnExportCSV');
+	const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
 
-				document.body.appendChild(dl);
-				dl.click();
-				document.body.removeChild(dl);
-				
-				showSaveNotification(false, "Tablo resmi cihazınıza indirildi. Şimdi paylaşabilirsiniz!");
-			})
-			.catch(function (error) {
-				// ... (Hata Yönetimi) ...
-				showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu.");
-			})
-			.finally(() => {
-				// --- TEMİZLİK: TÜM GEÇİCİ DEĞİŞİKLİKLERİ GERİ AL ---
-				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
-				targetElement.style.margin = originalContainerMargin;
-				targetElement.style.padding = originalContainerPadding;
-				targetElement.style.backgroundColor = '';
+	shareButton.style.display = 'none';
+	if (exportCSVButton) exportCSVButton.style.display = 'none';
 
-				// Gizlenen butonları ve layout'u geri getir
-				shareButton.style.display = shareButtonDisplay; // Orijinal görünürlüğe geri getir
-				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay; 
-				if (headerDiv) headerDiv.style.display = originalHeaderDisplay; // Header layout'u geri getir
+	// Geçici düzenleme
+	if (tableDiv) tableDiv.style.overflowX = 'visible';
+	targetElement.style.padding = '5px';
+	targetElement.style.margin = '5 auto';
+	targetElement.style.backgroundColor = '#fff';
+	targetElement.style.display = 'inline-block'; // Kırpılmayı önler
 
-				// Butonu sıfırla
-				shareButton.innerHTML = originalText;
-				shareButton.disabled = false;
-			});
+	const headerDiv = headerArea ? headerArea.querySelector('.flex.gap-3.items-center') : null;
+	const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
+	if (headerDiv) headerDiv.style.display = 'block';
+
+	document.querySelectorAll('[contenteditable="true"]').forEach(el => el.blur());
+
+	// --- Tarih inputlarını geçici metne çevir ---
+	const dateInputs = targetElement.querySelectorAll('input[type="date"]');
+	const replacements = [];
+
+	dateInputs.forEach(input => {
+		const span = document.createElement('span');
+		span.textContent = formatDateTurkish(input.value);
+		span.style.padding = '4px';
+		span.style.display = 'inline-block';
+		span.style.border = '1px solid #ddd';
+		span.style.borderRadius = '4px';
+		span.style.background = '#fff';
+		input.parentNode.insertBefore(span, input);
+		input.style.display = 'none';
+		replacements.push({ input, span });
+	});
+
+	// --- DOM-TO-IMAGE ---
+	domtoimage.toPng(targetElement, {
+		bgcolor: '#ffffff',
+		width: targetElement.scrollWidth,
+		height: targetElement.scrollHeight,
+		style: {
+			overflowX: 'visible',
+			minWidth: targetElement.scrollWidth + 'px',
+			display: 'inline-block'
 		}
+	})
+	.then(function (dataUrl) {
+		const dl = document.createElement('a');
+		dl.href = dataUrl;
+		dl.download = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
+
+		document.body.appendChild(dl);
+		dl.click();
+		document.body.removeChild(dl);
+
+		showSaveNotification(false, "Tablo resmi cihazınıza indirildi. Şimdi paylaşabilirsiniz!");
+	})
+	.catch(function () {
+		showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu.");
+	})
+	.finally(() => {
+		// --- Tarih alanlarını geri yükle ---
+		replacements.forEach(({ input, span }) => {
+			input.style.display = '';
+			span.remove();
+		});
+
+		// CSS ve butonları eski haline getir
+		if (tableDiv) tableDiv.style.overflowX = originalOverflow;
+		targetElement.style.padding = originalPadding;
+		targetElement.style.margin = originalMargin;
+		targetElement.style.backgroundColor = '';
+		targetElement.style.display = originalDisplay;
+
+		shareButton.style.display = shareButtonDisplay;
+		if (exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
+		if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
+
+		shareButton.innerHTML = originalText;
+		shareButton.disabled = false;
+	});
+}
     </script>
 	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
 </html>
+
 
 
 
