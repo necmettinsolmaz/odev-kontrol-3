@@ -967,17 +967,36 @@
 			display: 'inline-block'
 		}
 	})
-	.then(function (dataUrl) {
+	.then(async function (dataUrl) {
+	const fileName = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
+	
+	// Mobil paylaşım kontrolü
+	if (navigator.canShare && navigator.canShare({ files: [] })) {
+		try {
+			const response = await fetch(dataUrl);
+			const blob = await response.blob();
+			const file = new File([blob], fileName, { type: 'image/png' });
+			await navigator.share({
+				files: [file],
+				title: 'Ödev Tablosu',
+				text: `${currentClass} sınıfının ödev tablosu`
+			});
+			showSaveNotification(false, "Tablo başarıyla paylaşıldı!");
+		} catch (err) {
+			showSaveNotification(true, "Paylaşım iptal edildi veya başarısız oldu.");
+		}
+	} else {
+		// Destek yoksa indir
 		const dl = document.createElement('a');
 		dl.href = dataUrl;
-		dl.download = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
-
+		dl.download = fileName;
 		document.body.appendChild(dl);
 		dl.click();
 		document.body.removeChild(dl);
 
-		showSaveNotification(false, "Tablo resmi cihazınıza indirildi. Şimdi paylaşabilirsiniz!");
-	})
+		showSaveNotification(false, "Tablo cihazınıza indirildi. Şimdi paylaşabilirsiniz!");
+	}
+})
 	.catch(function () {
 		showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu.");
 	})
@@ -1007,6 +1026,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
 </html>
+
 
 
 
