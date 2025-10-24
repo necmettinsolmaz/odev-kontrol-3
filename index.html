@@ -127,7 +127,7 @@
                class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
         
         <button id="btnAddStudent" 
-                class="bg-teal-600 text-white p-2 rounded-lg hover:bg-teal-700 transition duration-150">
+                class="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 transition duration-150">
             Öğrenci Ekle
         </button>
     </div>
@@ -589,27 +589,46 @@
             }
             
 			// exportJSON fonksiyonu
-			function exportAllData(){
-				// Local Storage'da sadece "classes" tuttuğunuz için, onu yedeklemek yeterli
-				if(!Object.keys(classes).length){ 
-					alert('Kaydedilmiş sınıf verisi bulunmamaktadır.'); return; 
+			function exportAllData() {
+				// 1️⃣ Kaydedilmiş sınıf verisi var mı kontrol et
+				if (!classes || !Object.keys(classes).length) {
+					alert('Kaydedilmiş sınıf verisi bulunmamaktadır.');
+					return;
 				}
-				
-				// YEDEK: Local Storage'da classes dışında başka kritik veri tutuyorsanız,
-				// aşağıdaki gibi bir nesne oluşturup yedekleyin:
-				// const backupData = { classes: classes, settings: localStorage.getItem('settings') }; 
-				
-				const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(classes, null, 2));
-				
-				const dl = document.createElement('a'); 
-				dl.href = dataStr; 
-				dl.download = 'odev_takip_yedek_' + new Date().toISOString().split('T')[0] + '.json'; 
-				document.body.appendChild(dl); 
-				dl.click();
+
+			try {
+				// 2️⃣ JSON verisini oluştur
+				const jsonData = JSON.stringify(classes, null, 2);
+
+				// 3️⃣ Blob nesnesi oluştur (gerçek dosya gibi davranır)
+				const blob = new Blob([jsonData], { type: "application/json" });
+
+				// 4️⃣ Blob için geçici bir URL oluştur
+				const url = URL.createObjectURL(blob);
+
+				// 5️⃣ <a> etiketiyle indirme işlemini başlat
+				const dl = document.createElement('a');
+				dl.href = url;
+				dl.download = 'odev_takip_yedek_' + new Date().toISOString().split('T')[0] + '.json';
+
+				document.body.appendChild(dl);
+				dl.click(); // otomatik indir
 				document.body.removeChild(dl);
-				
-				// Kullanıcıya bilgi verelim
-				showSaveNotification(false, "Verileriniz başarıyla yedeklendi");
+
+				// 6️⃣ Bellek temizliği (Blob URL’ini serbest bırak)
+				URL.revokeObjectURL(url);
+
+				// 7️⃣ Kullanıcıya bilgi ver
+				if (typeof showSaveNotification === "function") {
+					showSaveNotification(false, "Verileriniz başarıyla yedeklendi");
+				} else {
+					alert("Verileriniz başarıyla yedeklendi");
+				}
+
+			} catch (err) {
+				console.error("Yedekleme sırasında hata oluştu:", err);
+				alert("Bir hata oluştu, yedekleme başarısız oldu. Tarayıcınızı yeniden deneyin.");
+			}
 			}
 			function formatDateTurkish(isoDate) {
 				if (!isoDate) return '';
