@@ -944,16 +944,21 @@
 			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: targetElement'i tablonun genişliğine zorla ***
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
-				targetElement.style.width = tableElement.scrollWidth + 40 + 'px';
+				targetElement.style.width = tableElement.scrollWidth + 'px';
 				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
-				headerArea.style.width = tableElement.scrollWidth + 'px';
+				headerArea.style.width = tableElement.scrollWidth +  'px';
 			}
 
 
 			// Diğer Layout Düzeltmeleri
-			if (tableDiv) tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
+			if (tableDiv) {
+				tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
+				tableDiv.style.width = 'auto';
+				tableDiv.style.maxWidth = 'none';
+			}
+ 
 			targetElement.style.padding = '5px';
-			targetElement.style.margin = '5 auto';
+			targetElement.style.margin = '5px auto';
 			targetElement.style.backgroundColor = '#ffffff';
 			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
 
@@ -966,7 +971,7 @@
 			domtoimage.toPng(targetElement, {
 				bgcolor: '#ffffff',
 				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
-				width: targetElement.offsetWidth, 
+				width: targetElement.scrollWidth, 
 				height: targetElement.scrollHeight,
 			})
 			.then(async function (dataUrl) {
@@ -1040,6 +1045,4 @@
 	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
 </html>
-
-
 
