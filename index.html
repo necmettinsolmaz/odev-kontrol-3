@@ -944,7 +944,7 @@
 			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: targetElement'i tablonun genişliğine zorla ***
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
-				targetElement.style.width = tableElement.scrollWidth + 'px';
+				targetElement.style.width = tableElement.scrollWidth + 20 + 'px';
 				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
 				headerArea.style.width = tableElement.scrollWidth + 'px';
 			}
@@ -1040,4 +1040,5 @@
 	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
 </html>
+
 
