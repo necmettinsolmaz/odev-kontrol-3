@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
-    
+    	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
     <style>
         /* SAF CSS: Durum Butonu Stilleri */
         .status-cell { 
@@ -158,7 +158,7 @@
 				</button>
 				
 				
-				<input type="file" id="fileImport" accept=".json" class="hidden">
+				
 				<button id="btnShareToParent" class="bg-purple-600 text-white p-2 rounded-lg text-sm hover:bg-purple-700 transition duration-150">
 					📸&nbsp;Paylaş
 				</button>
@@ -216,7 +216,7 @@
 
 			// KAYDETME FONKSİYONUNU GÜNCELLE
 			function saveData(){ 
-				localStorage.setItem('classes', JSON.stringify(classes)); 
+				localStorage.setItem('classes', JSON.stringify(classes));
 				// Bildirim çağırma artık dışarıda olacak
 			}
 			// YENİ: Statüleri Kaydetme Fonksiyonu
@@ -250,20 +250,6 @@
             const monthNames = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
             const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
-            function formatDateToTurkish(isoDateString) {
-                if (!isoDateString) return '';
-                const parts = isoDateString.split('-');
-                if (parts.length !== 3) return isoDateString; 
-
-                const date = new Date(isoDateString);
-                date.setMinutes(date.getMinutes() + date.getTimezoneOffset()); 
-
-                const dayOfMonth = date.getDate();
-                const month = monthNames[date.getMonth()];
-                const dayOfWeek = dayNames[date.getDay()];
-                
-                return `${dayOfMonth} ${month}. ${dayOfWeek}`;
-            }
 
             function updateClassSelect(selectValue){
                 // ... (Sınıf Seçim Mantığı) ...
@@ -286,9 +272,6 @@
                 const thead=document.getElementById('tableHead');
                 const display = document.getElementById('currentClassNameDisplay');
 				
-				// Ders adını localStorage'dan çek veya varsayılanı kullan
-				const LESSON_STORAGE_KEY = 'lessonName';
-				const DEFAULT_LESSON_NAME = 'Matematik';
 				const lessonName = localStorage.getItem(LESSON_STORAGE_KEY) || DEFAULT_LESSON_NAME;
                 const tableHeaderArea = document.getElementById('tableHeaderArea');
                 
@@ -344,7 +327,7 @@
 						this.classList.add('border-transparent');
 						// Bildirim fonksiyonunuzu çağırın
 						if (typeof showSaveNotification === 'function') {
-							showSaveNotification(false, "Ders adı kalıcı olarak güncellendi.");
+							showSaveNotification(false, "Ders adı güncellendi.");
 						}
 					});
 
@@ -382,8 +365,8 @@
                     row.classList.add('hover:bg-gray-50');
 
                     // Tarih Hücreleri için INPUT alanı oluşturuldu
-                    const givenDateInput = `<input type="text" readonly class="flatpickr-input" data-date-field="givenDate" data-hw='${hwIndex}' value="${formatDateToTurkish(hw.givenDate) || ''}">`;
-                    const checkDateInput = `<input type="text" readonly class="flatpickr-input" data-date-field="checkDate" data-hw='${hwIndex}' value="${formatDateToTurkish(hw.checkDate) || ''}">`;
+                    const givenDateInput = `<input type="text" readonly class="flatpickr-input" data-date-field="givenDate" data-hw='${hwIndex}' value="${formatDateTurkish(hw.givenDate) || ''}">`;
+                    const checkDateInput = `<input type="text" readonly class="flatpickr-input" data-date-field="checkDate" data-hw='${hwIndex}' value="${formatDateTurkish(hw.checkDate) || ''}">`;
 
 
                     // Ödev Bilgileri Sütunları
@@ -905,15 +888,15 @@
 			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
 			shareButton.disabled = true;
 
-			const targetElement = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
-			if (!targetElement) {
+			const tableContainer = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
+			if (!tableContainer) {
 				// Hata yönetimi aynı kalır...
 				return;
 			}
 			
 			// Gerekli Elemanları Seçme
 			const tableElement = document.getElementById('homeworkTable'); // Tablonun Kendisi
-			const tableDiv = targetElement.querySelector('.overflow-x-auto');
+			const tableDiv = tableContainer.querySelector('.overflow-x-auto');
 			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
 			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
 			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
@@ -922,11 +905,11 @@
 			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
 			
 			const originalOverflow = tableDiv ? tableDiv.style.overflowX : '';
-			const originalContainerPadding = targetElement.style.padding;
-			const originalContainerMargin = targetElement.style.margin;
+			const originalContainerPadding = tableContainer.style.padding;
+			const originalContainerMargin = tableContainer.style.margin;
 			
-			// KRİTİK YENİ YEDEK: targetElement'ın orijinal genişliğini sakla
-			const originalContainerWidth = targetElement.style.width; 
+			// KRİTİK YENİ YEDEK: tableContainer'ın orijinal genişliğini sakla
+			const originalContainerWidth = tableContainer.style.width; 
 			
 			// Başlık alanının ve butonların orijinal stillerini sakla
 			const originalCurrentClassNameWhitespace = currentClassNameArea ? currentClassNameArea.style.whiteSpace : '';
@@ -941,14 +924,14 @@
 			if(exportCSVButton) exportCSVButton.style.display = 'none';
 			if (headerDiv) headerDiv.style.display = 'block';
 
-			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: targetElement'i tablonun genişliğine zorla ***
+			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: tableContainer'i tablonun genişliğine zorla ***
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
-				targetElement.style.width = tableElement.scrollWidth + 'px';
+				tableContainer.style.width = tableElement.scrollWidth + 'px';
 				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
 				headerArea.style.width = tableElement.scrollWidth +  'px';
 			}
-
+ 
 
 			// Diğer Layout Düzeltmeleri
 			if (tableDiv) {
@@ -957,9 +940,9 @@
 				tableDiv.style.maxWidth = 'none';
 			}
  
-			targetElement.style.padding = '5px';
-			targetElement.style.margin = '5px auto';
-			targetElement.style.backgroundColor = '#ffffff';
+			tableContainer.style.padding = '5px';
+			tableContainer.style.margin = '5px auto';
+			tableContainer.style.backgroundColor = '#ffffff';
 			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
 
 			// Düzenlenebilir alanların focus durumunu kaldır
@@ -968,11 +951,11 @@
 
 			// --- 3. dom-to-image çağrısı ---
 			
-			domtoimage.toPng(targetElement, {
+			domtoimage.toPng(tableContainer, {
 				bgcolor: '#ffffff',
 				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
-				width: targetElement.scrollWidth, 
-				height: targetElement.scrollHeight,
+				width: tableContainer.scrollWidth, 
+				height: tableContainer.scrollHeight,
 			})
 			.then(async function (dataUrl) {
 		
@@ -1021,17 +1004,17 @@
 				// --- 4. TEMİZLİK: TÜM GEÇİCİ DEĞİŞİKLİKLERİ GERİ AL ---
 				
 				// KRİTİK: Genişliği geri yükle
-				targetElement.style.width = originalContainerWidth;
+				tableContainer.style.width = originalContainerWidth;
 				headerArea.style.width = ''; // Header genişliğini kaldır
 
 				// Diğer Layout Geri Yüklemeleri
-				targetElement.style.margin = originalContainerMargin;
-				targetElement.style.padding = originalContainerPadding;
-				targetElement.style.backgroundColor = '';
+				tableContainer.style.margin = originalContainerMargin;
+				tableContainer.style.padding = originalContainerPadding;
+				tableContainer.style.backgroundColor = '';
 
 				// Butonları ve Layout'u geri getir
 				shareButton.style.display = shareButtonDisplay;
-				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay; 
+				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
 				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
 				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
@@ -1042,7 +1025,7 @@
 			});
 		}
     </script>
-	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+
 </body>
 </html>
 
