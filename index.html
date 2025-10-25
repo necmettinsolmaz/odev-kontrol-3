@@ -134,50 +134,46 @@
 
 	<div class="add-homework bg-white p-4 rounded-lg shadow-md mb-6 flex flex-wrap gap-3 items-center">
 			
-			<input type="text" id="source" placeholder="Kaynak" 
-				   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
-				   
-			<input type="text" id="topic" placeholder="Konu" 
-				   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
-				   
-			<input type="text" id="pages" placeholder="Sayfa" 
-				   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-28"> 
-				   
-			<button id="btnAddHomework" 
-					class="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 transition duration-150 w-28">
-				Ödevi Ekle
-			</button>
-		</div>
-		<div id="tableContainer">
-	<div id="tableHeaderArea" class="mt-4 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">
-        
-	
-		<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>
-		
-		<div class="flex gap-3 items-center">
-			<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
-				Kaydet
-			</button>
-			
-			
-			<input type="file" id="fileImport" accept=".json" class="hidden">
-			<button id="btnShareToParent" class="bg-purple-600 text-white p-2 rounded-lg text-sm hover:bg-purple-700 transition duration-150">
-				📸&nbsp;Paylaş
-			</button>
-			<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>
-		
-		</div>
-	
+		<input type="text" id="source" placeholder="Kaynak" 
+			   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
+			   
+		<input type="text" id="topic" placeholder="Konu" 
+			   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
+			   
+		<input type="text" id="pages" placeholder="Sayfa" 
+			   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-28"> 
+			   
+		<button id="btnAddHomework" 
+				class="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 transition duration-150 w-28">
+			Ödevi Ekle
+		</button>
 	</div>
-    <div class="overflow-x-auto shadow-lg rounded-lg">
-        <table id="homeworkTable" class="min-w-full divide-y divide-gray-200">
-            <thead id="tableHead" class="bg-blue-600">
-            </thead>
-            <tbody id="homeworkBody" class="bg-white divide-y divide-gray-200">
-            </tbody>
-        </table>
-    </div>
-</div>
+	<div id="tableContainer">
+		<div id="tableHeaderArea" class="mt-4 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">			
+		
+			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>			
+			<div class="flex gap-3 items-center">
+				<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
+					Kaydet
+				</button>
+				
+				
+				<input type="file" id="fileImport" accept=".json" class="hidden">
+				<button id="btnShareToParent" class="bg-purple-600 text-white p-2 rounded-lg text-sm hover:bg-purple-700 transition duration-150">
+					📸&nbsp;Paylaş
+				</button>
+				<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>			
+			</div>	
+		</div>
+		<div class="overflow-x-auto shadow-lg rounded-lg">
+			<table id="homeworkTable" class="min-w-full divide-y divide-gray-200">
+				<thead id="tableHead" class="bg-blue-600">
+				</thead>
+				<tbody id="homeworkBody" class="bg-white divide-y divide-gray-200">
+				</tbody>
+			</table>
+		</div>
+	</div>
     <script>
 		let classes; 
 		let currentClass = '';
@@ -898,7 +894,7 @@
 		// JavaScript <script> bloğunda, mevcut fonksiyonlarınızın arasına ekleyin:
 
 		// GÜNCELLENMİŞ shareTableAsImage FONKSİYONU
-		function shareTableAsImage() {
+		async function shareTableAsImage() {
 			if (!currentClass) {
 				// Hata yönetimi aynı kalır...
 				return;
@@ -909,61 +905,76 @@
 			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
 			shareButton.disabled = true;
 
-			const targetElement = document.getElementById('tableContainer'); 
+			const targetElement = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
 			if (!targetElement) {
 				// Hata yönetimi aynı kalır...
 				return;
 			}
 			
+			// Gerekli Elemanları Seçme
+			const tableElement = document.getElementById('homeworkTable'); // Tablonun Kendisi
 			const tableDiv = targetElement.querySelector('.overflow-x-auto');
-			const headerArea = document.getElementById('tableHeaderArea');
-			const currentClassNameArea = document.getElementById('currentClassNameDisplay');
+			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
+			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
+			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
+			const exportCSVButton = document.getElementById('btnExportCSV');
+
+			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
 			
-			// --- KRİTİK İYİLEŞTİRME BAŞLANGICI ---
-			
-			// 1. CSS Yedeklerini ve Değiştirilecek Elemanları Sakla
 			const originalOverflow = tableDiv ? tableDiv.style.overflowX : '';
 			const originalContainerPadding = targetElement.style.padding;
-			const originalContainerMargin = targetElement.style.margin; // YENİ: Margin yedeklemesi
+			const originalContainerMargin = targetElement.style.margin;
+			
+			// KRİTİK YENİ YEDEK: targetElement'ın orijinal genişliğini sakla
+			const originalContainerWidth = targetElement.style.width; 
+			
+			// Başlık alanının ve butonların orijinal stillerini sakla
 			const originalCurrentClassNameWhitespace = currentClassNameArea ? currentClassNameArea.style.whiteSpace : '';
-			
-			
-			// YENİ KRİTİK BÖLÜM: Çıktıda görünmesini istemediğiniz butonları gizle
+			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
 			const shareButtonDisplay = shareButton.style.display;
-			const exportCSVButton = document.getElementById('btnExportCSV');
 			const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
 			
-			shareButton.style.display = 'none'; // 'Hazırlanıyor' butonunu tamamen gizle
-			if(exportCSVButton) exportCSVButton.style.display = 'none'; // 'Excele Aktar' butonunu gizle
+			// --- 2. Görüntü Öncesi Geçici CSS Değişiklikleri ---
 
-			// 2. Geçici CSS Değişiklikleri (Layout ve Kesilmeleri Önlemek İçin)
+			// Butonları gizle ve Header'daki flex düzenini boz
+			shareButton.style.display = 'none';
+			if(exportCSVButton) exportCSVButton.style.display = 'none';
+			if (headerDiv) headerDiv.style.display = 'block';
+
+			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: targetElement'i tablonun genişliğine zorla ***
+			if (tableElement) {
+				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
+				targetElement.style.width = tableElement.scrollWidth + 'px';
+				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
+				headerArea.style.width = tableElement.scrollWidth + 'px';
+			}
+
+
+			// Diğer Layout Düzeltmeleri
 			if (tableDiv) tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
-			targetElement.style.padding = '5px'; // Kapsayıcıya ekstra boşluk ver
+			targetElement.style.padding = '5px';
 			targetElement.style.margin = '5 auto';
-			targetElement.style.backgroundColor = '#ffffff'; 
-			
-			// Başlık sıkışmasını önlemek için, headerArea'nın içindeki Flexbox'ı geçici olarak kapatabiliriz.
-			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center');
-			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
-			if (headerDiv) headerDiv.style.display = 'block'; // Buton alanını block yapıp sıkışmayı çöz
-			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; //Tablo başlığı olan ... Sınıfı ödev tablosu 
+			targetElement.style.backgroundColor = '#ffffff';
+			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
 
+			// Düzenlenebilir alanların focus durumunu kaldır
 			document.querySelectorAll('[contenteditable="true"]').forEach(el => el.blur());
 
 
-			// dom-to-image çağrısı
+			// --- 3. dom-to-image çağrısı ---
+			
 			domtoimage.toPng(targetElement, {
 				bgcolor: '#ffffff',
-				// Genişliği, butonlar gizlendikten sonra bile tam almasını sağlamak için
-				width: targetElement.scrollWidth, 
+				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
+				width: targetElement.offsetWidth, 
 				height: targetElement.scrollHeight,
 			})
 			.then(async function (dataUrl) {
-    
+		
 				// Görüntü Dosyasının Adı
 				const filename = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
 
-				// 1. Mobil Kontrolü: Web Share API mevcut mu?
+				// Mobil Paylaşım Kontrolü (Web Share API)
 				if (navigator.share && navigator.canShare && dataUrl) {
 					
 					// Data URL'yi Blob nesnesine dönüştürme
@@ -976,23 +987,17 @@
 							title: 'Sınıf Ödev Tablosu',
 							text: `${currentClass} Sınıfı için ödev tablosu görselini paylaşıyorum.`,
 						});
-						// Başarılı paylaşım bildirimi
 						showSaveNotification(false, "Tablo resmi başarıyla paylaşıldı!");
 						
 					} catch (error) {
-						// Kullanıcı paylaşımı iptal edebilir, bu normaldir.
 						if (error.name !== 'AbortError') {
 							console.error('Web Share API hatası:', error);
 							showSaveNotification(true, "Paylaşım başlatılırken bir sorun oluştu.");
-						} else {
-							// Paylaşım iptal edilirse bildirim göstermeyebiliriz
 						}
 					}
 					
 				} else {
-					// 2. Masaüstü Desteği (Veya Web Share API'si Olmayan Tarayıcılar)
-					// İndirme işlemini tetikler (Masaüstü için tercih edilen yöntem)
-					
+					// Masaüstü Desteği (İndirme)
 					const dl = document.createElement('a');
 					dl.href = dataUrl;
 					dl.download = filename;
@@ -1005,22 +1010,27 @@
 				}
 			})
 			.catch(function (error) {
-				showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu.");
+				showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu: " + error.message);
 			})
 			.finally(() => {
-				// --- TEMİZLİK: TÜM GEÇİCİ DEĞİŞİKLİKLERİ GERİ AL ---
-				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
+				// --- 4. TEMİZLİK: TÜM GEÇİCİ DEĞİŞİKLİKLERİ GERİ AL ---
+				
+				// KRİTİK: Genişliği geri yükle
+				targetElement.style.width = originalContainerWidth;
+				headerArea.style.width = ''; // Header genişliğini kaldır
+
+				// Diğer Layout Geri Yüklemeleri
 				targetElement.style.margin = originalContainerMargin;
 				targetElement.style.padding = originalContainerPadding;
 				targetElement.style.backgroundColor = '';
 
-				// Gizlenen butonları ve layout'u geri getir
-				shareButton.style.display = shareButtonDisplay; // Orijinal görünürlüğe geri getir
-				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay; 
-				if (headerDiv) headerDiv.style.display = originalHeaderDisplay; // Header layout'u geri getir
-				
+				// Butonları ve Layout'u geri getir
+				shareButton.style.display = shareButtonDisplay;
+				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay; 
+				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
-
+				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
+				
 				// Butonu sıfırla
 				shareButton.innerHTML = originalText;
 				shareButton.disabled = false;
@@ -1030,5 +1040,4 @@
 	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
 </html>
-
 
