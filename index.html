@@ -950,7 +950,7 @@
 
 
 			// --- 3. dom-to-image çağrısı ---
-			
+			await new Promise(r => setTimeout(r, 100));
 			domtoimage.toPng(tableContainer, {
 				bgcolor: '#ffffff',
 				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
@@ -1028,4 +1028,5 @@
 
 </body>
 </html>
+
 
