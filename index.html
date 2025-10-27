@@ -165,8 +165,8 @@
 				<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>			
 			</div>	
 		</div>
-		<div class="overflow-x-auto shadow-lg rounded-lg">
-			<table id="homeworkTable" class="min-w-full divide-y divide-gray-200">
+		<div class="overflow-x-auto shadow-lg rounded-lg" >
+			<table id="homeworkTable" class="divide-y divide-gray-200">
 				<thead id="tableHead" class="bg-blue-600">
 				</thead>
 				<tbody id="homeworkBody" class="bg-white divide-y divide-gray-200">
@@ -928,20 +928,15 @@
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
 				tableContainer.style.width = tableElement.scrollWidth + 'px';
-				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
-				headerArea.style.width = tableElement.scrollWidth +  'px';
 			}
  
 
 			// Diğer Layout Düzeltmeleri
 			if (tableDiv) {
 				tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
-				tableDiv.style.width = 'auto';
-				tableDiv.style.maxWidth = 'none';
 			}
  
-			tableContainer.style.padding = '5px';
-			tableContainer.style.margin = '5px auto';
+			tableContainer.style.padding = '5px 5px 5px 5px';
 			tableContainer.style.backgroundColor = '#ffffff';
 			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
 
@@ -950,12 +945,9 @@
 
 
 			// --- 3. dom-to-image çağrısı ---
-			await new Promise(r => setTimeout(r, 100));
+			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			domtoimage.toPng(tableContainer, {
-				bgcolor: '#ffffff',
-				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
-				width: tableContainer.scrollWidth, 
-				height: tableContainer.scrollHeight,
+				bgcolor: '#ffffff'
 			})
 			.then(async function (dataUrl) {
 		
