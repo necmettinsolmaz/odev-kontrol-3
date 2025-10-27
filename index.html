@@ -165,7 +165,7 @@
 				<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>			
 			</div>	
 		</div>
-		<div class="overflow-x-auto shadow-lg rounded-lg w-full" >
+		<div class="overflow-x-auto shadow-lg rounded-lg w-full p-2" >
 			<table id="homeworkTable" class="divide-y divide-gray-200 min-w-full">
 				<thead id="tableHead" class="bg-blue-600">
 				</thead>
@@ -257,6 +257,12 @@
                 const prev = selectValue !== undefined ? selectValue : select.value;
                 
                 select.innerHTML = '<option value="">Sınıf Seçiniz</option>' + Object.keys(classes).map(cls=>`<option value="${cls}">${cls}</option>`).join('');
+				// Daha güvenli bir alternatif (DOM metotlarıyla):
+				select.innerHTML = ''; // Önce temizle
+				select.appendChild(new Option('Sınıf Seçiniz', '')); // Varsayılanı ekle
+				Object.keys(classes).forEach(cls => {
+					select.appendChild(new Option(cls, cls));
+				});
                 
                 if(prev && classes[prev]){
                     select.value = prev;
@@ -874,7 +880,7 @@
             if(currentClass) loadClass(); else renderTable();
         });
 		
-		// JavaScript <script> bloğunda, mevcut fonksiyonlarınızın arasına ekleyin:
+
 
 		// GÜNCELLENMİŞ shareTableAsImage FONKSİYONU
 		async function shareTableAsImage() {
@@ -884,8 +890,6 @@
 			}
 			
 			const shareButton = document.getElementById('btnShareToParent');
-			const originalText = shareButton.innerHTML;
-			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
 			shareButton.disabled = true;
 
 			const tableContainer = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
@@ -899,7 +903,6 @@
 			const tableDiv = tableContainer.querySelector('.overflow-x-auto');
 			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
 			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
-			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
 			const exportCSVButton = document.getElementById('btnExportCSV');
 
 			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
@@ -913,7 +916,6 @@
 			
 			// Başlık alanının ve butonların orijinal stillerini sakla
 			const originalCurrentClassNameWhitespace = currentClassNameArea ? currentClassNameArea.style.whiteSpace : '';
-			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
 			const shareButtonDisplay = shareButton.style.display;
 			const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
 			
@@ -922,7 +924,6 @@
 			// Butonları gizle ve Header'daki flex düzenini boz
 			shareButton.style.display = 'none';
 			if(exportCSVButton) exportCSVButton.style.display = 'none';
-			if (headerDiv) headerDiv.style.display = 'block';
 
 			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: tableContainer'i tablonun genişliğine zorla ***
 			if (tableElement) {
@@ -1007,12 +1008,10 @@
 				// Butonları ve Layout'u geri getir
 				shareButton.style.display = shareButtonDisplay;
 				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
-				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
 				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
 				
 				// Butonu sıfırla
-				shareButton.innerHTML = originalText;
 				shareButton.disabled = false;
 			});
 		}
