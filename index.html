@@ -151,7 +151,17 @@
 	<div id="tableContainer">
 		<div id="tableHeaderArea" class="mt-4 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">			
 		
-			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>			
+			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>	
+			<!--ödevleri filtreleme-->
+			<div class="filter-area flex flex-wrap gap-3 items-center">
+				<input type="text" id="filterText" placeholder="Ödev Ara (Kaynak, Konu, Sayfa)" 
+					   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow w-[400px]">
+				
+				<button id="btnClearFilter" 
+						class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-150">
+					Temizle
+				</button>
+			</div>
 			<div class="flex gap-3 items-center">
 				<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
 					Kaydet
@@ -165,8 +175,8 @@
 				<button id="btnExportCSV" class="bg-gray-600 text-white p-2 rounded-lg text-sm hover:bg-gray-700 transition duration-150">Excele Aktar</button>			
 			</div>	
 		</div>
-		<div class="overflow-x-auto shadow-lg rounded-lg w-full p-2" >
-			<table id="homeworkTable" class="divide-y divide-gray-200 min-w-full">
+		<div class="overflow-x-auto shadow-lg rounded-lg">
+			<table id="homeworkTable" class="min-w-full divide-y divide-gray-200">
 				<thead id="tableHead" class="bg-blue-600">
 				</thead>
 				<tbody id="homeworkBody" class="bg-white divide-y divide-gray-200">
@@ -257,12 +267,6 @@
                 const prev = selectValue !== undefined ? selectValue : select.value;
                 
                 select.innerHTML = '<option value="">Sınıf Seçiniz</option>' + Object.keys(classes).map(cls=>`<option value="${cls}">${cls}</option>`).join('');
-				// Daha güvenli bir alternatif (DOM metotlarıyla):
-				select.innerHTML = ''; // Önce temizle
-				select.appendChild(new Option('Sınıf Seçiniz', '')); // Varsayılanı ekle
-				Object.keys(classes).forEach(cls => {
-					select.appendChild(new Option(cls, cls));
-				});
                 
                 if(prev && classes[prev]){
                     select.value = prev;
@@ -469,7 +473,7 @@
 						if (oldStatus !== "") {
 							this.classList.remove(oldStatus);
 						}
-						this.classList.add(newStatus); 
+						this.classList.add(newStatus);
                         this.innerText = newStatus;
                         //DOM'dan kayıtlı değeri al
                         const originalStatus = this.dataset.originalStatus;
@@ -546,7 +550,30 @@
                 });
 
             }
+			function applyFilter() {
+				const filterText = document.getElementById('filterText').value.toLowerCase().trim();
+				const rows = document.getElementById('homeworkBody').querySelectorAll('tr');
 
+				rows.forEach(row => {
+					// İlk 4 hücre (Kaynak, Konu, Sayfa dahil) metinlerini birleştir
+					const cells = row.querySelectorAll('td');
+					
+					// 1: Kaynak (index 1), 2: Konu (index 2), 3: Sayfa (index 3)
+					// Not: 0. index # numarası
+					const source = cells[1] ? cells[1].textContent.toLowerCase() : '';
+					const topic = cells[2] ? cells[2].textContent.toLowerCase() : '';
+					const pages = cells[3] ? cells[3].textContent.toLowerCase() : '';
+					
+					const rowData = `${source} ${topic} ${pages}`;
+					
+					// Satırın filtrelenen metni içerip içermediğini kontrol et
+					if (rowData.includes(filterText) || filterText === '') {
+						row.style.display = ''; // Göster
+					} else {
+						row.style.display = 'none'; // Gizle
+					}
+				});
+			}
             function loadClass(){
                 currentClass = document.getElementById('classSelect').value;
                 renderTable();
@@ -675,12 +702,6 @@
 				// 6️⃣ Bellek temizliği (Blob URL’ini serbest bırak)
 				URL.revokeObjectURL(url);
 
-				// 7️⃣ Kullanıcıya bilgi ver
-				if (typeof showSaveNotification === "function") {
-					showSaveNotification(false, "Verileriniz başarıyla yedeklendi");
-				} else {
-					alert("Verileriniz başarıyla yedeklendi");
-				}
 
 			} catch (err) {
 				console.error("Yedekleme sırasında hata oluştu:", err);
@@ -838,7 +859,7 @@
 				  }
 
 				  renderTable();
-				  showSaveNotification(false, "✅ Veriler başarıyla içe aktarıldı.");
+				  showSaveNotification(false, "Veriler başarıyla içe aktarıldı.");
 				} 
 				catch (err) {
 				  console.error("İçe aktarma hatası:", err);
@@ -874,13 +895,21 @@
 			// Olay Dinleyicileri bloğuna ekleyin:
 			document.getElementById('btnShareToParent').addEventListener('click', shareTableAsImage);
 			
+			// Filtreleme metni değiştiğinde filtreyi uygula (klavyeden yazarken anında filtreleme)
+			document.getElementById('filterText').addEventListener('input', applyFilter);
+
+			// Temizle butonuna tıklandığında hem metin kutusunu temizle hem de filtreyi sıfırla
+			document.getElementById('btnClearFilter').addEventListener('click', function() {
+				document.getElementById('filterText').value = '';
+				applyFilter();
+			});
 			
             // Başlangıç Mantığı
             updateClassSelect();
             if(currentClass) loadClass(); else renderTable();
         });
 		
-
+		// JavaScript <script> bloğunda, mevcut fonksiyonlarınızın arasına ekleyin:
 
 		// GÜNCELLENMİŞ shareTableAsImage FONKSİYONU
 		async function shareTableAsImage() {
@@ -890,6 +919,8 @@
 			}
 			
 			const shareButton = document.getElementById('btnShareToParent');
+			const originalText = shareButton.innerHTML;
+			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
 			shareButton.disabled = true;
 
 			const tableContainer = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
@@ -903,6 +934,7 @@
 			const tableDiv = tableContainer.querySelector('.overflow-x-auto');
 			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
 			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
+			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
 			const exportCSVButton = document.getElementById('btnExportCSV');
 
 			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
@@ -916,6 +948,7 @@
 			
 			// Başlık alanının ve butonların orijinal stillerini sakla
 			const originalCurrentClassNameWhitespace = currentClassNameArea ? currentClassNameArea.style.whiteSpace : '';
+			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
 			const shareButtonDisplay = shareButton.style.display;
 			const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
 			
@@ -924,20 +957,26 @@
 			// Butonları gizle ve Header'daki flex düzenini boz
 			shareButton.style.display = 'none';
 			if(exportCSVButton) exportCSVButton.style.display = 'none';
+			if (headerDiv) headerDiv.style.display = 'block';
 
 			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: tableContainer'i tablonun genişliğine zorla ***
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
 				tableContainer.style.width = tableElement.scrollWidth + 'px';
+				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
+				headerArea.style.width = tableElement.scrollWidth +  'px';
 			}
  
 
 			// Diğer Layout Düzeltmeleri
 			if (tableDiv) {
 				tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
+				tableDiv.style.width = 'auto';
+				tableDiv.style.maxWidth = 'none';
 			}
  
-			tableContainer.style.padding = '5px 5px 5px 5px';
+			tableContainer.style.padding = '5px';
+			tableContainer.style.margin = '5px auto';
 			tableContainer.style.backgroundColor = '#ffffff';
 			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
 
@@ -946,9 +985,12 @@
 
 
 			// --- 3. dom-to-image çağrısı ---
-			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+			
 			domtoimage.toPng(tableContainer, {
-				bgcolor: '#ffffff'
+				bgcolor: '#ffffff',
+				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
+				width: tableContainer.scrollWidth, 
+				height: tableContainer.scrollHeight,
 			})
 			.then(async function (dataUrl) {
 		
@@ -1008,10 +1050,12 @@
 				// Butonları ve Layout'u geri getir
 				shareButton.style.display = shareButtonDisplay;
 				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
+				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
 				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
 				
 				// Butonu sıfırla
+				shareButton.innerHTML = originalText;
 				shareButton.disabled = false;
 			});
 		}
@@ -1019,5 +1063,4 @@
 
 </body>
 </html>
-
 
