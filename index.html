@@ -149,25 +149,21 @@
 		</button>
 	</div>
 	<div id="tableContainer">
-		<div id="tableHeaderArea" class="mt-4 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">			
-		
-			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>	
+		<div id="tableHeaderArea" class="mt-3 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">
+			
 			<!--ödevleri filtreleme-->
-			<div class="filter-area flex flex-wrap gap-3 items-center">
+			<div id="filterDiv" class="filter-area flex flex-wrap  items-center">
 				<input type="text" id="filterText" placeholder="Ödev Ara (Kaynak, Konu, Sayfa)" 
-					   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow w-[400px]">
+					   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow w-[250px]">
 				
-				<button id="btnClearFilter" 
-						class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-150">
-					Temizle
-				</button>
 			</div>
-			<div class="flex gap-3 items-center">
+			
+			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>	
+			
+			<div id="butonlar" class="flex gap-3 items-center">
 				<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
 					Kaydet
-				</button>
-				
-				
+				</button>				
 				
 				<button id="btnShareToParent" class="bg-purple-600 text-white p-2 rounded-lg text-sm hover:bg-purple-700 transition duration-150">
 					📸&nbsp;Paylaş
@@ -898,11 +894,7 @@
 			// Filtreleme metni değiştiğinde filtreyi uygula (klavyeden yazarken anında filtreleme)
 			document.getElementById('filterText').addEventListener('input', applyFilter);
 
-			// Temizle butonuna tıklandığında hem metin kutusunu temizle hem de filtreyi sıfırla
-			document.getElementById('btnClearFilter').addEventListener('click', function() {
-				document.getElementById('filterText').value = '';
-				applyFilter();
-			});
+			
 			
             // Başlangıç Mantığı
             updateClassSelect();
@@ -920,8 +912,7 @@
 			
 			const shareButton = document.getElementById('btnShareToParent');
 			const originalText = shareButton.innerHTML;
-			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
-			shareButton.disabled = true;
+			
 
 			const tableContainer = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
 			if (!tableContainer) {
@@ -934,6 +925,8 @@
 			const tableDiv = tableContainer.querySelector('.overflow-x-auto');
 			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
 			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
+			// *** DÜZELTME: Sadece filterDiv'in orijinal display değerini saklayın ***
+			const originalFilterDivDisplay = filterDiv ? filterDiv.style.display: '';
 			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
 			const exportCSVButton = document.getElementById('btnExportCSV');
 
@@ -958,7 +951,7 @@
 			shareButton.style.display = 'none';
 			if(exportCSVButton) exportCSVButton.style.display = 'none';
 			if (headerDiv) headerDiv.style.display = 'block';
-
+			if(filterDiv) filterDiv.style.display = 'none';
 			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: tableContainer'i tablonun genişliğine zorla ***
 			if (tableElement) {
 				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
@@ -1051,6 +1044,7 @@
 				shareButton.style.display = shareButtonDisplay;
 				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
 				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
+				if(filterDiv) filterDiv.style.display = originalFilterDivDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
 				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
 				
