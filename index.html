@@ -105,7 +105,7 @@
 		<div id="saveNotification" class="fixed top-5 right-5 z-50 bg-green-500 text-white p-3 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none">
 			✓ Kaydedildi!
 	</div>
-	<div class="bg-white p-4 rounded-lg shadow-md mb-1 flex flex-wrap gap-3 items-center">
+	<div class="bg-white p-4 rounded-lg shadow-md mb-2 flex flex-wrap gap-3 items-center">
         
         <input type="text" id="newClassName" placeholder="Yeni Sınıf Adı" 
                class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[150px]">
@@ -149,7 +149,7 @@
 		</button>
 	</div>
 
-	<div class="filter-area bg-white p-2 rounded-lg shadow-md mb-1 flex flex-wrap gap-3 items-center hidden"> 
+	<div class="filter-area bg-white p-2 rounded-lg shadow-md mb-2 flex flex-wrap gap-3 items-center hidden"> 
 		<input type="text" id="filterRows" placeholder="Satır No Filtresi (Örn: 5, 10-15)" 
 			   class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 flex-grow min-w-[200px]">
 
@@ -159,7 +159,7 @@
 		</button>
 	</div>
 	<div id="tableContainer">
-		<div id="tableHeaderArea" class="mt-1 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">			
+		<div id="tableHeaderArea" class="mt-2 mb-3 flex justify-between items-center p-2 bg-white rounded-lg shadow-md">			
 		
 			<h2 id="currentClassNameDisplay" class="text-l font-bold text-gray-700">Lütfen Bir Sınıf Seçin</h2>			
 			<div class="flex gap-3 items-center">
@@ -1130,6 +1130,10 @@
 			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
 			const exportCSVButton = document.getElementById('btnExportCSV');
 			const saveStatusesButton = document.getElementById('btnSaveStatuses'); // Kaydet butonunu da gizle
+			
+			// YENİ: Ödev Silme Butonlarını Seç ve Durumlarını Sakla
+			const deleteButtons = document.querySelectorAll('.delete-homework-btn');
+			const originalDeleteButtonStyles = [];
 
 			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
 			
@@ -1153,6 +1157,12 @@
 			shareButton.style.display = 'none';
 			if(exportCSVButton) exportCSVButton.style.display = 'none';
 			if(saveStatusesButton) saveStatusesButton.style.display = 'none'; // Kaydet butonunu da gizle
+			
+			// YENİ: Silme butonlarını gizle
+			deleteButtons.forEach(btn => {
+				originalDeleteButtonStyles.push({ element: btn, display: btn.style.display });
+				btn.style.display = 'none'; // Geçici olarak gizle
+			});
 			
 			if (headerDiv) headerDiv.style.display = 'block';
 
@@ -1248,6 +1258,12 @@
 				shareButton.style.display = shareButtonDisplay;
 				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
 				if(saveStatusesButton) saveStatusesButton.style.display = saveStatusesDisplay;
+				
+				// YENİ: Ödev Silme Butonlarının Durumunu Geri Yükle
+				originalDeleteButtonStyles.forEach(item => {
+					item.element.style.display = item.display;
+				});
+				
 				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
 				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
 				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
