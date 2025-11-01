@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ödev Takip Sistemi - Final</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
-    	<script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+	<link rel="stylesheet" href="card-styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* SAF CSS: Durum Butonu Stilleri */
         .status-cell { 
@@ -171,7 +169,9 @@
 			<div class="flex gap-3 items-center">
 				<button id="btnSaveStatuses" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition duration-150 hidden">
 					Kaydet
-				</button>				
+				</button>	
+				<div id="homework-card-placeholder" class="homework-card-container">
+				</div>				
 				<button id="btnShareToParent" 
 						class="bg-purple-600 text-white p-2 rounded-lg text-sm hover:bg-purple-700 transition duration-150 flex items-center justify-center">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5 mr-1">
@@ -1056,7 +1056,18 @@
 			document.getElementById('btnSaveStatuses').addEventListener('click', saveStatuses)
 			
 			// Paylaş butonunu bağla
-			document.getElementById('btnShareToParent').addEventListener('click', shareTableAsImage);
+			// ✅ DOĞRU OLAN: Bir anonim fonksiyon kullanarak değişkenleri yakalayın
+document.getElementById('btnShareToParent').addEventListener('click', () => {
+    
+    // --- 1. Değişkenleri Alın ---
+    // Eğer sınıf adını tutan değişkeniniz 'currentClass' ise, onu kullanın.
+    const currentClass = window.currentSelectedClass || document.getElementById('classSelect').value; // Sınıf seçim değerini buraya alın
+    const currentSubjectName = lessonName; // Ders adı (Dinamik bir yerden alıyorsanız onu kullanın)
+    
+    // --- 2. Fonksiyonu Doğru Argümanlarla Çağırın ---
+    // (İlk argümanı kullanmadığımız için, çağrıda ona null gönderebiliriz.)
+    shareTableAsImage(null, currentClass, currentSubjectName);
+});;
 			
 			// FİLTRELEME OLAY DİNLEYİCİLERİ
 			// Metin filtreleme kaldırıldı, sadece Satır No filtresi kaldı
@@ -1114,174 +1125,73 @@
 		// JavaScript <script> bloğunda, mevcut fonksiyonlarınızın arasına ekleyin:
 
 		// GÜNCELLENMİŞ shareTableAsImage FONKSİYONU
-		async function shareTableAsImage() {
-			if (!currentClass) {
-				// Hata yönetimi aynı kalır...
-				return;
-			}
-			
-			const shareButton = document.getElementById('btnShareToParent');
-			const originalText = shareButton.innerHTML;
-			shareButton.innerHTML = '📸&nbsp;Hazırlanıyor...';
-			shareButton.disabled = true;
+const shareTableAsImage = (dataJsonFromParameter, selectedClass, subjectName) => {
+    
+    // ===============================================
+    // KRİTİK DEĞİŞİKLİK: Veriyi localStorage'dan oku
+    // ===============================================
+    const classesDataString = localStorage.getItem('classes');
+    let dataJson; // localStorage'dan gelen veriyi tutacak
+    if (typeof selectedClass !== 'string' || !selectedClass) {
+        // Bu hata, sınıf adının hala gelmediğini gösterir (örneğin, seçili sınıf yoksa)
+        alert("Görselleştirilecek sınıf seçili değil.");
+        return;
+    }
+    if (classesDataString) {
+        try {
+            dataJson = JSON.parse(classesDataString);
+        } catch (e) {
+            console.error("localStorage'daki 'classes' verisi çözümlenemedi (JSON parse hatası).", e);
+            alert("Veri yüklenirken bir hata oluştu.");
+            return;
+        }
+    } else {
+        console.error("localStorage'da 'classes' anahtarı bulunamadı.");
+        alert("Gerekli veri ('classes') localStorage'da bulunamadı. Lütfen önce veriyi kaydedin.");
+        return;
+    }
+    // ===============================================
+// Boşlukları temizle ve büyük harfe çevir
+    const classKey = selectedClass.trim().toUpperCase(); 
+    
+    // ... geri kalan kod ...
+    
+    const targetClass = classKey; // Temizlenmiş anahtarı kullan
+    const classData = dataJson[targetClass]; // JSON'dan veriyi çek
+    const cardPlaceholderId = 'homework-card-placeholder';
+    const placeholder = document.getElementById(cardPlaceholderId);
 
-			const tableContainer = document.getElementById('tableContainer'); // Ana Kapsayıcı (Görüntülenen Alan)
-			if (!tableContainer) {
-				// Hata yönetimi aynı kalır...
-				return;
-			}
-			
-			// Gerekli Elemanları Seçme
-			const tableElement = document.getElementById('homeworkTable'); // Tablonun Kendisi
-			const tableDiv = tableContainer.querySelector('.overflow-x-auto');
-			const headerArea = document.getElementById('tableHeaderArea'); // Başlık ve Butonları Saran Alan
-			const currentClassNameArea = document.getElementById('currentClassNameDisplay'); // H2 Başlığı
-			const headerDiv = headerArea.querySelector('.flex.gap-3.items-center'); // Butonları saran Flex div
-			const exportCSVButton = document.getElementById('btnExportCSV');
-			const saveStatusesButton = document.getElementById('btnSaveStatuses'); // Kaydet butonunu da gizle
-			
-			// YENİ: Ödev Silme Butonlarını Seç ve Durumlarını Sakla
-			const deleteButtons = document.querySelectorAll('.delete-homework-btn');
-			const originalDeleteButtonStyles = [];
+    // Hata Kontrolü: Veri ve gerekli JS fonksiyonları yüklenmiş mi?
+    if (!classData || !window.createHomeworkPlanCardHTML || !placeholder || !window.exportCardToPNG) {
+        console.error("Hata Detayları:", {
+            classDataExists: !!classData,
+            createFuncExists: !!window.createHomeworkPlanCardHTML,
+            placeholderExists: !!placeholder,
+            exportFuncExists: !!window.exportCardToPNG
+        });
+        alert("Görselleştirme için gerekli veri, kart alanı (placeholder) veya kodlar (card-logic.js) yüklenemedi. Lütfen konsolu kontrol edin.");
+        return;
+    }
 
-			// --- 1. Orijinal CSS Yedeklerini Saklama (Temizlik için KRİTİK) ---
-			
-			const originalOverflow = tableDiv ? tableDiv.style.overflowX : '';
-			const originalContainerPadding = tableContainer.style.padding;
-			const originalContainerMargin = tableContainer.style.margin;
-			
-			// KRİTİK YENİ YEDEK: tableContainer'ın orijinal genişliğini sakla
-			const originalContainerWidth = tableContainer.style.width; 
-			
-			// Başlık alanının ve butonların orijinal stillerini sakla
-			const originalCurrentClassNameWhitespace = currentClassNameArea ? currentClassNameArea.style.whiteSpace : '';
-			const originalHeaderDisplay = headerDiv ? headerDiv.style.display : '';
-			const shareButtonDisplay = shareButton.style.display;
-			const exportCSVDisplay = exportCSVButton ? exportCSVButton.style.display : '';
-			const saveStatusesDisplay = saveStatusesButton ? saveStatusesButton.style.display : '';
-			
-			// --- 2. Görüntü Öncesi Geçici CSS Değişiklikleri ---
+    // Paylaş butonunun durumunu güncelle
+    
+    
+    // 1. HTML Kartını Oluşturma
+    const cardHTML = window.createHomeworkPlanCardHTML(
+        targetClass, 
+        subjectName || "Matematik", 
+        classData.homeworks
+    );
 
-			// Butonları gizle ve Header'daki flex düzenini boz
-			shareButton.style.display = 'none';
-			if(exportCSVButton) exportCSVButton.style.display = 'none';
-			if(saveStatusesButton) saveStatusesButton.style.display = 'none'; // Kaydet butonunu da gizle
-			
-			// YENİ: Silme butonlarını gizle
-			deleteButtons.forEach(btn => {
-				originalDeleteButtonStyles.push({ element: btn, display: btn.style.display });
-				btn.style.display = 'none'; // Geçici olarak gizle
-			});
-			
-			if (headerDiv) headerDiv.style.display = 'block';
-
-			// *** KRİTİK GENİŞLİK ÇÖZÜMÜ: tableContainer'i tablonun genişliğine zorla ***
-			if (tableElement) {
-				// Ana kapsayıcının genişliğini, tablonun gerçek (kaydırılmamış) genişliğine eşitle
-				tableContainer.style.width = tableElement.scrollWidth + 'px';
-				// Tablo başlık alanının da genişliğini eşitlemek, boşluk kalmasını engeller
-				headerArea.style.width = tableElement.scrollWidth +  'px';
-			}
- 
-
-			// Diğer Layout Düzeltmeleri
-			if (tableDiv) {
-				tableDiv.style.overflowX = 'visible'; // Kaydırmayı kapat
-				tableDiv.style.width = 'auto';
-				tableDiv.style.maxWidth = 'none';
-			}
- 
-			tableContainer.style.padding = '5px';
-			tableContainer.style.margin = '5px auto';
-			tableContainer.style.backgroundColor = '#ffffff';
-			if (currentClassNameArea) currentClassNameArea.style.whiteSpace = 'nowrap'; // Başlık metnini tek satıra zorla
-
-			// Düzenlenebilir alanların focus durumunu kaldır
-			document.querySelectorAll('[contenteditable="true"]').forEach(el => el.blur());
-
-
-			// --- 3. dom-to-image çağrısı ---
-			
-			domtoimage.toPng(tableContainer, {
-				bgcolor: '#ffffff',
-				// Genişliği CSS ile ayarladığımız için, offsetWidth kullanmak yeterlidir.
-				width: tableContainer.scrollWidth, 
-				height: tableContainer.scrollHeight,
-			})
-			.then(async function (dataUrl) {
-		
-				// Görüntü Dosyasının Adı
-				const filename = `${currentClass}_odev_tablo_${new Date().toISOString().split('T')[0]}.png`;
-
-				// Mobil Paylaşım Kontrolü (Web Share API)
-				if (navigator.share && navigator.canShare && dataUrl) {
-					
-					// Data URL'yi Blob nesnesine dönüştürme
-					const blob = await (await fetch(dataUrl)).blob();
-					const file = new File([blob], filename, { type: 'image/png' });
-
-					try {
-						await navigator.share({
-							files: [file],
-							title: 'Sınıf Ödev Tablosu',
-							text: `${currentClass} Sınıfı için ödev tablosu.`,
-						});
-						showSaveNotification(false, "Tablo resmi başarıyla paylaşıldı!");
-						
-					} catch (error) {
-						if (error.name !== 'AbortError') {
-							console.error('Web Share API hatası:', error);
-							showSaveNotification(true, "Paylaşım başlatılırken bir sorun oluştu.");
-						}
-					}
-					
-				} else {
-					// Masaüstü Desteği (İndirme)
-					const dl = document.createElement('a');
-					dl.href = dataUrl;
-					dl.download = filename;
-
-					document.body.appendChild(dl);
-					dl.click();
-					document.body.removeChild(dl);
-					
-					showSaveNotification(false, "Tablo resmi cihazınıza indirildi. Şimdi paylaşabilirsiniz!");
-				}
-			})
-			.catch(function (error) {
-				showSaveNotification(true, "Görsel oluşturulurken bir hata oluştu: " + error.message);
-			})
-			.finally(() => {
-				// --- 4. TEMİZLİK: TÜM GEÇİCİ DEĞİŞİKLİKLERİ GERİ AL ---
-				
-				// KRİTİK: Genişliği geri yükle
-				tableContainer.style.width = originalContainerWidth;
-				headerArea.style.width = ''; // Header genişliğini kaldır
-
-				// Diğer Layout Geri Yüklemeleri
-				tableContainer.style.margin = originalContainerMargin;
-				tableContainer.style.padding = originalContainerPadding;
-				tableContainer.style.backgroundColor = '';
-
-				// Butonları ve Layout'u geri getir
-				shareButton.style.display = shareButtonDisplay;
-				if(exportCSVButton) exportCSVButton.style.display = exportCSVDisplay;
-				if(saveStatusesButton) saveStatusesButton.style.display = saveStatusesDisplay;
-				
-				// YENİ: Ödev Silme Butonlarının Durumunu Geri Yükle
-				originalDeleteButtonStyles.forEach(item => {
-					item.element.style.display = item.display;
-				});
-				
-				if (headerDiv) headerDiv.style.display = originalHeaderDisplay;
-				if (currentClassNameArea) currentClassNameArea.style.whiteSpace = originalCurrentClassNameWhitespace;
-				if (tableDiv) tableDiv.style.overflowX = originalOverflow;
-				
-				// Butonu sıfırla
-				shareButton.innerHTML = originalText;
-				shareButton.disabled = false;
-			});
-		}
+    // 2. Kartı DOM'a Enjekte Etme
+    placeholder.innerHTML = cardHTML;
+    
+    // 3. PNG Olarak İndirme
+    window.exportCardToPNG(cardPlaceholderId, targetClass)
+        .finally(() => {
+           
+        });
+};
 		// Heroicons
 		// Silme butonu için sadece SVG simgesini döndüren yardımcı fonksiyon
 		function getDeleteSvgIcon() {
@@ -1292,6 +1202,18 @@
 				</svg>`;
 		}
     </script>
+	
+
+
+    <script>
+
+    </script>
+	
+	<script src="card-logic.js"></script>
+	 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
 </body>
 </html>
