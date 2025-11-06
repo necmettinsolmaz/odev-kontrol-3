@@ -493,9 +493,11 @@
                     const hwCells = `
                         <td class="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center justify-between">
                             <span class="font-bold">${hwIndex+1}</span>
-                            // <button class="text-red-500 hover:text-red-700 p-1 rounded delete-homework-btn" data-hw='${hwIndex}' title="Ödevi Sil">
-                            //    ${getDeleteSvgIcon()}
-                            // </button>
+							<!--
+                             <button class="text-red-500 hover:text-red-700 p-1 rounded delete-homework-btn" data-hw='${hwIndex}' title="Ödevi Sil">
+                                ${getDeleteSvgIcon()}
+                             </button>
+							 -->
                         </td>
                         <td contenteditable class='editable px-2 py-2 whitespace-nowrap text-sm text-gray-700' data-field='source' data-index='${hwIndex}' data-type='text'>${hw.source || ''}</td>
                         <td contenteditable class='editable px-2 py-2 whitespace-nowrap text-sm text-gray-700' data-field='topic' data-index='${hwIndex}' data-type='text'>${hw.topic || ''}</td>
